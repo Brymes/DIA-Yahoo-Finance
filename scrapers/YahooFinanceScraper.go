@@ -12,8 +12,8 @@ import (
 )
 
 type YahooFinanceScraper struct {
-	close        chan bool
-	priceChannel chan float64
+	Close        chan bool
+	PriceChannel chan float64
 	// error handling; to read error or closed, first acquire read lock
 	// only cleanup method should hold write lock
 	ticker *time.Ticker
@@ -35,8 +35,8 @@ type YahooFinanceScraperResponse struct {
 func NewYahooFinanceScraper(pair string, scrape bool, refreshDelay int) *YahooFinanceScraper {
 	delay := time.Duration(refreshDelay) * time.Second
 	s := &YahooFinanceScraper{
-		close:        make(chan bool),
-		priceChannel: make(chan float64),
+		Close:        make(chan bool),
+		PriceChannel: make(chan float64),
 		ticker:       time.NewTicker(delay),
 		pair:         pair,
 	}
@@ -47,11 +47,13 @@ func NewYahooFinanceScraper(pair string, scrape bool, refreshDelay int) *YahooFi
 }
 
 func (s *YahooFinanceScraper) mainLoop() {
+	s.Update()
 	for {
 		select {
 		case <-s.ticker.C:
 			s.Update()
-		case <-s.close: // user requested shutdown
+		case <-s.Close: // user requested shutdown
+			close(s.PriceChannel)
 			log.Printf("YahooFinanceScraper shutting down")
 			return
 		}
@@ -90,11 +92,10 @@ func (s *YahooFinanceScraper) Update() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(string(body))
+
 	reader := csv.NewReader(bytes.NewReader(body))
 	records, _ := reader.ReadAll()
 
-	fmt.Println(records)
 	var data []YahooFinanceScraperResponse
 	for _, record := range records[1:] {
 		open, err := strconv.ParseFloat(record[1], 64)
@@ -120,5 +121,5 @@ func (s *YahooFinanceScraper) Update() {
 		data = append(data, resp)
 	}
 
-	s.priceChannel <- data[0].AdjClose
+	s.PriceChannel <- data[0].AdjClose
 }
