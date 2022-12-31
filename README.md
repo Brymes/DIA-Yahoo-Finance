@@ -13,7 +13,7 @@
 
 ## Intro
 
-A simple app for getting currency prices from Yahoo Finance
+A simple app for getting currency prices from Yahoo Finance. Find example in main.go
 
 ## Prerequisites
 
@@ -21,3 +21,8 @@ A simple app for getting currency prices from Yahoo Finance
 
 ## Important Assumptions
 - The price is set to be the Adjusted closing price as opposed to the (Open, High, Low, Close prices)
+- Pair must be specified in format such as ```EURUSD``` wihtout slash or spaces
+
+---
+Copyright © 2022 TACBIZ Development (Timothy Odebunmi).  
+Covered by MIT License.
